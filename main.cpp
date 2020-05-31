@@ -1,6 +1,8 @@
-#include <iostream>
 #include<bits/stdc++.h>
+#include<stdio.h>
+#include<time.h>
 using namespace std;
+
 map<int, pair<int, int>> mp;
 
 int number_of_cells,grid_size;
@@ -15,10 +17,28 @@ vector<vector<int>> connections={{2,3}, {1,3}, {1,2}, {5}, {4,6}, {5}, {8}, {7},
                                      {12, 13}, {11, 13}, {11, 12, 15}, {15, 16, 19, 20},
                                      {13, 14, 16, 19, 20}, {14, 15, 19, 20}, {}, {}, {14, 15, 16, 20}, {14, 15, 16, 19}};
 
+void size_grid()
+{
+    for(int i=0;i<grid_size;i++)
+        grid[i].clear();
+    grid.clear();
+    
+    visited.resize(number_of_cells+1);
+
+    for(int i=1;i*i<=number_of_cells;i++)   
+        grid_size = i;
+    grid_size++;
+
+    grid.resize(grid_size);
+    for(int i=0;i<grid_size;i++)
+        grid[i].resize(grid_size);
+}
+
 void random_connections(int n)
 {
     connections.clear();
     connections.resize(n);
+    srand(time(NULL));
     for(int i=0;i<n;i++)
     {
         int number_of_connections = rand()%n;
@@ -33,6 +53,19 @@ void random_connections(int n)
     }
 }
 
+void random_grid(int n)
+{
+    size_grid();
+    int grid_total = grid_size*grid_size;
+    vector<int>arr(grid_total);
+    for(int i=0;i<n;i++)    
+        arr[i]=i+1;
+    random_shuffle(arr.begin(),arr.end());
+    int cur = 0;
+    for(int i=0;i<grid_size;i++)
+        for(int j=0;j<grid_size;j++)
+            grid[i][j] = arr[cur++];
+}
 bool cmp(const pair<int,int>&a,const pair<int,int>&b)
 {
     if(a.first == b.first)  
@@ -79,18 +112,6 @@ void create_CNG()
     for(int i=1;i<CNG.size();i++)
         cout<<i<<" "<<CNG[i]<<endl;
     */
-}
-void size_grid()
-{
-    visited.resize(number_of_cells+1);
-
-    for(int i=1;i*i<=number_of_cells;i++)   
-        grid_size = i;
-    grid_size++;
-
-    grid.resize(grid_size);
-    for(int i=0;i<grid_size;i++)
-        grid[i].resize(grid_size);
 }
 
 bool valid(int i,int j)
@@ -150,7 +171,6 @@ void dfs(int i,int j,int module)
 }
 void initial_placement()
 {
-    cout<<"started"<<endl;
     create_WCG();
     create_CNG();
     size_grid();
@@ -185,13 +205,6 @@ void initial_placement()
                 dfs(start.first,start.second,order[i].second);
             }
         }
-    }
-
-    for(int i=0;i<grid_size;i++)
-    {
-        for(int j=0;j<grid_size;j++)
-            cout<<grid[i][j]<<" ";
-        cout<<endl;
     }
 }
 
@@ -400,39 +413,43 @@ void simulated_annealing() {
 
 }
 
-int main() {
-    
-    cout<<"enter number of modules"<<endl;
-    int n;  cin>>n;
-
-    random_connections(n);
-    number_of_cells = connections.size();
-    initial_placement();
-    for(int i = 0; i < grid_size; i++)
-        for (int j = 0; j < grid_size; j++)
-        {
-            mp[grid[i][j]] = make_pair(i, j);
-        }
-    cout<<"initial grid :"<<endl;
-    for(int i = 0; i < grid_size; i++)
+void print_grid()
+{
+    cout<<"grid size "<<grid_size<<endl;
+    for(int i=0;i<grid_size;i++)
     {
-        for (int j = 0; j < grid_size; j++)
+        for(int j=0;j<grid_size;j++)
             cout<<grid[i][j]<<" ";
         cout<<endl;
     }
-    float cost = calculate_cost();
-    cout<<"Intial cost = "<<cost<<endl;
+    cout<<"------------------------------------------------------"<<endl;
+}
+void fill_map()
+{
+    mp.clear();
+    for(int i = 0; i < grid_size; i++)
+        for (int j = 0; j < grid_size; j++)
+            mp[grid[i][j]] = make_pair(i, j);
+}
+int main() {
+    cout<<"enter number of modules"<<endl;
+    cin >> number_of_cells;
+
+    random_connections(number_of_cells);
+
+    random_grid(number_of_cells);
+    fill_map();
+    cout<<"Random grid with cost : "<<calculate_cost()<<endl;
+    print_grid();
+
+    initial_placement();
+    fill_map();
+    cout<<"initial grid with cost :"<<calculate_cost()<<endl;
+    print_grid();
 
     simulated_annealing();
-    cost = calculate_cost();
+    cout<<"optimal grid after Simulated annealing with cost : "<<calculate_cost()<<endl;
+    print_grid();
 
-    cout<<"Cost after Simulated annealing = "<<cost<<endl;
-    cout<<"Optimal grid :"<<endl;
-    for(int i = 0; i < grid_size; i++)
-    {
-        for (int j = 0; j < grid_size; j++)
-            cout<<grid[i][j]<<" ";
-        cout<<endl;
-    }
     return 0;
 }
