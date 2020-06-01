@@ -3,6 +3,9 @@
 #include<time.h>
 using namespace std;
 
+int dx[] = { 1,0,-1,0,1,-1,-1,1 };
+int dy[] = { 0,1,0,-1,1,1,-1,-1 };
+
 map<int, pair<int, int>> mp;
 
 int number_of_cells,grid_size;
@@ -10,12 +13,16 @@ vector<vector<int>>grid;
 vector<int>visited;
 map<int,pair<int,int>>closest;
 
-int dx[] = { 1,0,-1,0,1,-1,-1,1 };
-int dy[] = { 0,1,0,-1,1,1,-1,-1 };
+vector<vector<int>> connections;
+vector<vector<pair<int,int>>>WCG;
+vector<int>CNG;
 
-vector<vector<int>> connections={{2,3}, {1,3}, {1,2}, {5}, {4,6}, {5}, {8}, {7}, {}, {},
-                                     {12, 13}, {11, 13}, {11, 12, 15}, {15, 16, 19, 20},
-                                     {13, 14, 16, 19, 20}, {14, 15, 19, 20}, {}, {}, {14, 15, 16, 20}, {14, 15, 16, 19}};
+bool cmp(const pair<int,int>&a,const pair<int,int>&b)
+{
+    if(a.first == b.first)  
+        return a.second<b.second;
+    return a.first>b.first;
+}
 
 void size_grid()
 {
@@ -66,14 +73,7 @@ void random_grid(int n)
         for(int j=0;j<grid_size;j++)
             grid[i][j] = arr[cur++];
 }
-bool cmp(const pair<int,int>&a,const pair<int,int>&b)
-{
-    if(a.first == b.first)  
-        return a.second<b.second;
-    return a.first>b.first;
-}
-vector<vector<pair<int,int>>>WCG;
-vector<int>CNG;
+
 void create_WCG()
 {
     vector<map<int,int>>graph(number_of_cells+1);
@@ -89,14 +89,6 @@ void create_WCG()
             WCG[i].push_back({x.second,x.first});
         sort(WCG[i].begin(),WCG[i].end(),cmp);
     }
-    /*
-    for(int i=1;i<=number_of_cells;i++)
-    {
-        cout<<"connecte to "<<i<<endl;
-        for(int j=0;j<WCG[i].size();j++)
-            cout<<WCG[i][j].second<<" "<<WCG[i][j].first<<endl;
-    }
-    */
 }
 void create_CNG()
 {
@@ -108,10 +100,6 @@ void create_CNG()
         else 
             CNG[i] = i;
     }
-    /*
-    for(int i=1;i<CNG.size();i++)
-        cout<<i<<" "<<CNG[i]<<endl;
-    */
 }
 
 bool valid(int i,int j)
@@ -169,6 +157,7 @@ void dfs(int i,int j,int module)
         }
     }
 }
+
 void initial_placement()
 {
     create_WCG();
@@ -219,7 +208,6 @@ double calculate_cost() {
             int x2 = mp[connections[i][j]].first;
             int y2 = mp[connections[i][j]].second;
             cost += abs(x2-x1)+abs(y2-y1);
-            // cost += sqrt(pow(x2 - x1, 2) * 1.0 + pow(y2 - y1, 2) * 1.0);
         }
     }
     return cost;
@@ -424,6 +412,7 @@ void print_grid()
     }
     cout<<"------------------------------------------------------"<<endl;
 }
+
 void fill_map()
 {
     mp.clear();
@@ -431,17 +420,35 @@ void fill_map()
         for (int j = 0; j < grid_size; j++)
             mp[grid[i][j]] = make_pair(i, j);
 }
+
+void read_file(string file_name)
+{
+    ifstream in(file_name);
+    string number_of_modules;
+    in >> number_of_modules;
+    number_of_cells = stoi(number_of_modules);
+
+    getline(in,number_of_modules);
+
+    connections.clear();
+    connections.resize(number_of_cells);
+
+    for(int i=0;i<number_of_cells;i++)
+    {
+        string line;
+        getline(in,line);
+        stringstream ss(line);
+        
+        int x;
+        while(ss>>x)
+            connections[i].push_back(x);
+    }
+}
 int main() {
-    cout<<"enter number of modules"<<endl;
-    cin >> number_of_cells;
-
-    random_connections(number_of_cells);
-
-    random_grid(number_of_cells);
-    fill_map();
-    cout<<"Random grid with cost : "<<calculate_cost()<<endl;
-    print_grid();
-
+    cout<<"Enter test case file name:";
+    string file_name;   cin>>file_name;
+    
+    read_file(file_name);
     initial_placement();
     fill_map();
     cout<<"initial grid with cost :"<<calculate_cost()<<endl;
@@ -450,6 +457,4 @@ int main() {
     simulated_annealing();
     cout<<"optimal grid after Simulated annealing with cost : "<<calculate_cost()<<endl;
     print_grid();
-
-    return 0;
 }
